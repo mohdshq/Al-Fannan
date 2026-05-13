@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user-specific files
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
+# Build artifacts
+build/
+DerivedData/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Reference / research material (Andalusi screenshots, mockups)
+AnalysisPhotos/
+ElementsPhotos/
+screenshot_*.png
+*.screenshot.png
+
+# Helper scripts
+download_calligraphy.sh
+
+# Secrets
+*.env
+GoogleService-Info.plist
