@@ -172,15 +172,9 @@ struct HomeView: View {
         .slideIn(from: .bottom, delay: 0.2)
     }
     
-    /// Helper to reset canvas for a brand-new project
+    /// Helper to reset canvas for a brand-new project from the quick-action row.
     private func startNewProject(width: CGFloat, height: CGFloat) {
-        canvasVM.currentProjectId = nil
-        canvasVM.currentProjectName = ""
-        canvasVM.elements.removeAll()
-        canvasVM.canvasWidth = width
-        canvasVM.canvasHeight = height
-        canvasVM.backgroundColor = .white
-        canvasVM.backgroundGradientColors = []
+        canvasVM.loadNewProject(width: width, height: height)
         navigateToEditor = true
     }
     
@@ -259,15 +253,7 @@ struct HomeView: View {
     
     private func recentProjectCard(_ project: Project) -> some View {
         Button {
-            // Open project in editor — set project identity so save updates the same file
-            canvasVM.currentProjectId = project.id
-            canvasVM.currentProjectName = project.name
-            canvasVM.canvasWidth = project.canvasWidth
-            canvasVM.canvasHeight = project.canvasHeight
-            canvasVM.elements = project.elements
-            if let bgHex = project.backgroundColor.nilIfEmpty {
-                canvasVM.backgroundColor = Color(hex: bgHex)
-            }
+            canvasVM.loadExistingProject(project)
             navigateToEditor = true
         } label: {
             VStack(alignment: .leading, spacing: DS.Spacing.xs) {

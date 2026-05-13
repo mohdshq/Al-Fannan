@@ -337,10 +337,50 @@ class CanvasViewModel {
         }
     }
     
-    // MARK: - Clear
-    func clearCanvas() {
-        saveState()
+    // MARK: - Project Lifecycle
+
+    /// Start editing a brand-new project. Resets all canvas state and ensures
+    /// the next save creates a new file rather than overwriting an existing one.
+    func loadNewProject(preset: CanvasPreset) {
+        canvasWidth = preset.width
+        canvasHeight = preset.height
+        resetCanvasState()
+        currentProjectId = nil
+        currentProjectName = ""
+    }
+
+    /// Start editing a brand-new project with explicit dimensions.
+    /// Convenience for the Home quick-action buttons.
+    func loadNewProject(width: CGFloat, height: CGFloat) {
+        canvasWidth = width
+        canvasHeight = height
+        resetCanvasState()
+        currentProjectId = nil
+        currentProjectName = ""
+    }
+
+    /// Load an existing saved project into the canvas for editing.
+    /// Preserves the project's id so subsequent saves update the same file.
+    func loadExistingProject(_ project: Project) {
+        canvasWidth = project.canvasWidth
+        canvasHeight = project.canvasHeight
+        resetCanvasState()
+        elements = project.elements
+        backgroundColor = Color(hex: project.backgroundColor)
+        currentProjectId = project.id
+        currentProjectName = project.name
+    }
+
+    /// Internal helper: clears everything *except* canvas size and project identity.
+    private func resetCanvasState() {
         elements.removeAll()
         selectedElementIds.removeAll()
+        backgroundColor = .white
+        backgroundGradientColors = []
+        backgroundTexture = nil
+        canvasScale = 1.0
+        undoStack.removeAll()
+        redoStack.removeAll()
     }
+
 }

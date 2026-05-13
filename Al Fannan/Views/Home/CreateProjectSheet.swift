@@ -95,8 +95,7 @@ struct CreateProjectSheet: View {
                             GoldButton("Create", icon: "plus", isCompact: true) {
                                 if let w = Double(customWidth), let h = Double(customHeight) {
                                     let preset = CanvasPreset(name: "Custom", nameAr: "مخصص", icon: "aspectratio", width: w, height: h)
-                                    canvasVM.setCanvasSize(preset: preset)
-                                    canvasVM.clearCanvas()
+                                    canvasVM.loadNewProject(preset: preset)
                                     dismiss()
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                         navigateToEditor = true
@@ -122,13 +121,13 @@ struct CreateProjectSheet: View {
     
     private func presetCard(_ preset: CanvasPreset) -> some View {
         Button {
-            canvasVM.setCanvasSize(preset: preset)
-            canvasVM.clearCanvas()
+            canvasVM.loadNewProject(preset: preset)
             dismiss()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 navigateToEditor = true
             }
-        } label: {
+        }
+        label: {
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: preset.icon)
                     .font(.system(size: 20))
