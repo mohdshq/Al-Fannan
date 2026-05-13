@@ -142,19 +142,13 @@ class CanvasViewModel {
     func duplicateElement(_ id: UUID) {
         guard let element = elements.first(where: { $0.id == id }) else { return }
         saveState()
-        var copy = element
-        copy = CanvasElement(type: copy.type, name: copy.name + " Copy",
-                             position: CGPoint(x: copy.position.x + 20, y: copy.position.y + 20),
-                             size: copy.size)
-        copy.text = element.text
-        copy.textStyle = element.textStyle
-        copy.imageName = element.imageName
-        copy.imageData = element.imageData
-        copy.stickerName = element.stickerName
-        copy.shapeStyle = element.shapeStyle
-        copy.rotation = element.rotation
-        copy.opacity = element.opacity
+        var copy = element                                      // value-type copy: all fields preserved
+        copy.id = UUID()                                        // unique identity
+        copy.name = element.name + " Copy"
+        copy.position.x += 20
+        copy.position.y += 20
         copy.zIndex = (elements.map(\.zIndex).max() ?? 0) + 1
+        copy.isSelected = false                                 // never duplicate selection state
         elements.append(copy)
         selectedElementIds = [copy.id]
     }
