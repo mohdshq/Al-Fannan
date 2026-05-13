@@ -1,8 +1,8 @@
 import SwiftUI
 
 // MARK: - Project Model
-struct Project: Identifiable, Equatable {
-    let id: UUID
+struct Project: Identifiable, Codable, Equatable {
+    var id: UUID
     var name: String
     var nameAr: String
     var elements: [CanvasElement]
@@ -13,7 +13,7 @@ struct Project: Identifiable, Equatable {
     var createdAt: Date
     var updatedAt: Date
     var thumbnailData: Data?
-    
+
     init(name: String = "Untitled", nameAr: String = "بدون عنوان",
          canvasWidth: CGFloat = 1080, canvasHeight: CGFloat = 1080) {
         self.id = UUID()
@@ -23,52 +23,12 @@ struct Project: Identifiable, Equatable {
         self.canvasWidth = canvasWidth
         self.canvasHeight = canvasHeight
         self.backgroundColor = "#141418"
+        self.backgroundGradient = nil
         self.createdAt = Date()
         self.updatedAt = Date()
+        self.thumbnailData = nil
     }
-    
-    /// Restore a project from saved data (preserving its original ID)
-    static func _fromSaved(id: UUID, name: String, nameAr: String,
-                            canvasWidth: CGFloat, canvasHeight: CGFloat,
-                            backgroundColor: String, elements: [CanvasElement],
-                            createdAt: Date, updatedAt: Date) -> Project {
-        var p = Project(name: name, nameAr: nameAr, canvasWidth: canvasWidth, canvasHeight: canvasHeight)
-        // We need to use the original ID — use a workaround via a private init
-        var restored = p
-        restored = Project._init(id: id, name: name, nameAr: nameAr, elements: elements,
-                                  canvasWidth: canvasWidth, canvasHeight: canvasHeight,
-                                  backgroundColor: backgroundColor, createdAt: createdAt, updatedAt: updatedAt)
-        return restored
-    }
-    
-    private static func _init(id: UUID, name: String, nameAr: String, elements: [CanvasElement],
-                               canvasWidth: CGFloat, canvasHeight: CGFloat,
-                               backgroundColor: String, createdAt: Date, updatedAt: Date) -> Project {
-        var p = Project()
-        p = Project(name: name, nameAr: nameAr, canvasWidth: canvasWidth, canvasHeight: canvasHeight)
-        // Overwrite fields
-        return Project(
-            _id: id, name: name, nameAr: nameAr, elements: elements,
-            canvasWidth: canvasWidth, canvasHeight: canvasHeight,
-            backgroundColor: backgroundColor, createdAt: createdAt, updatedAt: updatedAt
-        )
-    }
-    
-    /// Internal init that allows specifying all fields including ID
-    private init(_id: UUID, name: String, nameAr: String, elements: [CanvasElement],
-                 canvasWidth: CGFloat, canvasHeight: CGFloat,
-                 backgroundColor: String, createdAt: Date, updatedAt: Date) {
-        self.id = _id
-        self.name = name
-        self.nameAr = nameAr
-        self.elements = elements
-        self.canvasWidth = canvasWidth
-        self.canvasHeight = canvasHeight
-        self.backgroundColor = backgroundColor
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
-    }
-    
+
     var aspectRatio: CGFloat { canvasWidth / canvasHeight }
 }
 

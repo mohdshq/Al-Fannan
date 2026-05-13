@@ -23,18 +23,11 @@ class ProjectViewModel {
         for saved in savedProjects {
             var project = Project(name: saved.name, nameAr: saved.nameAr,
                                   canvasWidth: saved.canvasWidth, canvasHeight: saved.canvasHeight)
-            // Override the auto-generated ID with the saved one
-            project = Project._fromSaved(
-                id: saved.id,
-                name: saved.name,
-                nameAr: saved.nameAr,
-                canvasWidth: saved.canvasWidth,
-                canvasHeight: saved.canvasHeight,
-                backgroundColor: saved.backgroundColor.hex,
-                elements: saved.elements.map { CanvasElement.fromSaved($0) },
-                createdAt: saved.createdAt,
-                updatedAt: saved.modifiedAt
-            )
+            project.id = saved.id
+            project.backgroundColor = saved.backgroundColor.hex
+            project.elements = saved.elements.map { CanvasElement.fromSaved($0) }
+            project.createdAt = saved.createdAt
+            project.updatedAt = saved.modifiedAt
             loaded.append(project)
         }
         

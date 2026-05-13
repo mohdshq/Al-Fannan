@@ -7,7 +7,7 @@ enum CanvasElementType: String, Codable, CaseIterable {
     case sticker = "Sticker"
     case shape = "Shape"
     case video = "Video"
-    
+
     var icon: String {
         switch self {
         case .text: return "textformat"
@@ -20,11 +20,11 @@ enum CanvasElementType: String, Codable, CaseIterable {
 }
 
 // MARK: - Text Fill Type
-enum TextFillType: String, CaseIterable {
+enum TextFillType: String, Codable, CaseIterable {
     case solid = "Solid"
     case gradient = "Gradient"
     case image = "Image"
-    
+
     var icon: String {
         switch self {
         case .solid: return "paintbrush.fill"
@@ -34,8 +34,21 @@ enum TextFillType: String, CaseIterable {
     }
 }
 
+// MARK: - Text Alignment
+enum TextAlignmentOption: String, Codable, CaseIterable {
+    case leading, center, trailing
+
+    var systemAlignment: TextAlignment {
+        switch self {
+        case .leading: return .leading
+        case .center: return .center
+        case .trailing: return .trailing
+        }
+    }
+}
+
 // MARK: - Text Style
-struct TextStyle: Equatable {
+struct TextStyle: Codable, Equatable {
     var fontName: String = "System"
     var fontSize: CGFloat = 24
     var textColor: String = "#FFFFFF"
@@ -55,8 +68,7 @@ struct TextStyle: Equatable {
     var fillType: TextFillType = .solid
     var gradientColors: [String] = ["#D4A853", "#F0D48A", "#D4A853"]
     var gradientAngle: Double = 0
-    
-    /// Convenience init for template building
+
     init(fontName: String = "System", fontSize: CGFloat = 24, textColor: String = "#FFFFFF",
          alignment: TextAlignmentOption = .center, letterSpacing: CGFloat = 0, lineSpacing: CGFloat = 4,
          isRTL: Bool = false, isBold: Bool = false, isItalic: Bool = false,
@@ -86,19 +98,8 @@ struct TextStyle: Equatable {
     }
 }
 
-enum TextAlignmentOption: String, CaseIterable {
-    case leading, center, trailing
-    var systemAlignment: TextAlignment {
-        switch self {
-        case .leading: return .leading
-        case .center: return .center
-        case .trailing: return .trailing
-        }
-    }
-}
-
 // MARK: - Mask Shape
-enum MaskShape: String, CaseIterable {
+enum MaskShape: String, Codable, CaseIterable {
     case none = "None"
     case circle = "Circle"
     case heart = "Heart"
@@ -110,7 +111,7 @@ enum MaskShape: String, CaseIterable {
     case arch = "Arch"
     case shield = "Shield"
     case cross = "Cross"
-    
+
     var icon: String {
         switch self {
         case .none: return "slash.circle"
@@ -128,10 +129,11 @@ enum MaskShape: String, CaseIterable {
     }
 }
 
-// MARK: - Shape Style
-enum ShapeType: String, CaseIterable {
+// MARK: - Shape Type
+enum ShapeType: String, Codable, CaseIterable {
     case rectangle, circle, roundedRect, triangle, star, hexagon
     case arrow, speechBubble, banner, pentagon, cross, diamond, ring
+
     var icon: String {
         switch self {
         case .rectangle: return "rectangle"
@@ -151,18 +153,27 @@ enum ShapeType: String, CaseIterable {
     }
 }
 
-// MARK: - Texture Background
+// MARK: - Shape Style
+struct ShapeStyleData: Codable, Equatable {
+    var shapeType: ShapeType = .rectangle
+    var fillColor: String = "#D4A853"
+    var strokeColor: String = "#FFFFFF"
+    var strokeWidth: CGFloat = 0
+    var cornerRadius: CGFloat = 8
+}
+
+// MARK: - Texture Background (NOT Codable — UI-only)
 struct TextureBackground: Identifiable, Equatable {
     let id: String
     let name: String
     let nameAr: String
-    let colors: [Color]  // Used to generate procedural textures
+    let colors: [Color]
     let style: TextureStyle
-    
+
     enum TextureStyle: String {
         case paper, marble, wood, fabric, concrete, linen, grain, watercolor
     }
-    
+
     static let textures: [TextureBackground] = [
         TextureBackground(id: "paper_cream", name: "Cream Paper", nameAr: "ورق كريمي", colors: [Color(hex: "F5F0E8"), Color(hex: "E8E0D0")], style: .paper),
         TextureBackground(id: "paper_aged", name: "Aged Paper", nameAr: "ورق قديم", colors: [Color(hex: "D4C5A0"), Color(hex: "C4B48E")], style: .paper),
@@ -179,17 +190,9 @@ struct TextureBackground: Identifiable, Equatable {
     ]
 }
 
-struct ShapeStyleData: Equatable {
-    var shapeType: ShapeType = .rectangle
-    var fillColor: String = "#D4A853"
-    var strokeColor: String = "#FFFFFF"
-    var strokeWidth: CGFloat = 0
-    var cornerRadius: CGFloat = 8
-}
-
 // MARK: - Canvas Element
-struct CanvasElement: Identifiable, Equatable {
-    let id: UUID
+struct CanvasElement: Identifiable, Codable, Equatable {
+    var id: UUID
     var type: CanvasElementType
     var name: String
     var position: CGPoint
@@ -202,22 +205,22 @@ struct CanvasElement: Identifiable, Equatable {
     var textStyle: TextStyle? = nil
     var imageName: String? = nil
     var imageData: Data? = nil
-    var backgroundRemovedData: Data? = nil  // AI BG-removed version
+    var backgroundRemovedData: Data? = nil
     var stickerName: String? = nil
     var shapeStyle: ShapeStyleData? = nil
     var maskShape: MaskShape = .none
-    var cropRect: CGRect? = nil          // Normalized 0...1 crop rect
-    var filterName: String? = nil        // CIFilter name applied to image
-    var filterIntensity: Float = 1.0     // Filter intensity 0...1
+    var cropRect: CGRect? = nil
+    var filterName: String? = nil
+    var filterIntensity: Float = 1.0
     var isLocked: Bool = false
     var isVisible: Bool = true
     var isSelected: Bool = false
     var enterAnimation: ElementAnimation = .none
     var animationDuration: Double = 0.5
     var useBackgroundRemoved: Bool = false
-    var flipX: Bool = false   // horizontal flip
-    var flipY: Bool = false   // vertical flip
-    
+    var flipX: Bool = false
+    var flipY: Bool = false
+
     init(type: CanvasElementType, name: String,
          position: CGPoint = CGPoint(x: 187, y: 300),
          size: CGSize = CGSize(width: 200, height: 60)) {
@@ -227,7 +230,8 @@ struct CanvasElement: Identifiable, Equatable {
         self.position = position
         self.size = size
     }
-    
+
+    // Factory helpers
     static func textElement(_ text: String, isArabic: Bool = false) -> CanvasElement {
         var el = CanvasElement(type: .text, name: "Text", size: CGSize(width: 250, height: 80))
         el.text = text
@@ -237,19 +241,19 @@ struct CanvasElement: Identifiable, Equatable {
         el.textStyle = style
         return el
     }
-    
+
     static func imageElement(_ name: String) -> CanvasElement {
         var el = CanvasElement(type: .image, name: "Image", size: CGSize(width: 200, height: 200))
         el.imageName = name
         return el
     }
-    
+
     static func stickerElement(_ name: String) -> CanvasElement {
         var el = CanvasElement(type: .sticker, name: name, size: CGSize(width: 100, height: 100))
         el.stickerName = name
         return el
     }
-    
+
     static func shapeElement(_ type: ShapeType) -> CanvasElement {
         var el = CanvasElement(type: .shape, name: type.rawValue, size: CGSize(width: 150, height: 150))
         el.shapeStyle = ShapeStyleData(shapeType: type)
