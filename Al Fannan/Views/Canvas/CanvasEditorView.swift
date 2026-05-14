@@ -9,11 +9,11 @@ struct CanvasEditorView: View {
     @State private var showExportSheet = false
     @State private var showTextEditor = false
     @State private var showPhotoPicker = false
-    @State private var dragOffset: CGSize = .zero
-    @State private var currentDragId: UUID? = nil
+    @GestureState private var dragTranslation: CGSize = .zero
+    @GestureState private var draggingElementId: UUID? = nil
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
-    @State private var currentMagnification: CGFloat = 1.0
-    @State private var currentRotation: Angle = .zero
+    @GestureState private var currentMagnification: CGFloat = 1.0
+    @GestureState private var currentRotation: Angle = .zero
     @State private var showSaveConfirm = false
     @State private var selectedElementOpacity: Double = 1.0
     @State private var showReplacePicker = false
@@ -262,7 +262,7 @@ struct CanvasEditorView: View {
                     
                     // Quick action toolbar for selected element
                     if let element = viewModel.selectedElement,
-                       currentDragId == nil {
+                       draggingElementId == nil {
                         let scaleX = displayWidth / viewModel.canvasWidth
                         let scaleY = displayHeight / viewModel.canvasHeight
                         let elH = element.size.height * scaleY * element.scale
@@ -324,24 +324,105 @@ struct CanvasEditorView: View {
         let isSelected = viewModel.selectedElementIds.contains(element.id)
         let elW = element.size.width * scaleX
         let elH = element.size.height * scaleY
-        
+        let isDragging = draggingElementId == element.id
+
+        // Live transforms only applied to the dragged/pinched/rotated element
+        let liveScale = isDragging ? currentMagnification : 1.0
+        let liveRotation = isDragging ? currentRotation.degrees : 0.0
+        let liveOffsetX = isDragging ? dragTranslation.width : 0
+        let liveOffsetY = isDragging ? dragTranslation.height : 0
+
+        let dragGesture = DragGesture(minimumDistance: 0)
+            .updating($dragTranslation) { value, state, _ in
+                state = value.translation
+            }
+            .updating($draggingElementId) { _, state, _ in
+                state = element.id
+            }
+            .onChanged { value in
+                // Only update snap guides here (cheap @State writes)
+                let newX = element.position.x + value.translation.width / scaleX
+                let newY = element.position.y + value.translation.height / scaleY
+                let centerX = viewModel.canvasWidth / 2
+                let centerY = viewModel.canvasHeight / 2
+                let snapThreshold: CGFloat = 10
+                let nextV = abs(newX - centerX) < snapThreshold
+                let nextH = abs(newY - centerY) < snapThreshold
+                if nextV != showAlignV { showAlignV = nextV }
+                if nextH != showAlignH { showAlignH = nextH }
+            }
+            .onEnded { value in
+                var finalX = element.position.x + value.translation.width / scaleX
+                var finalY = element.position.y + value.translation.height / scaleY
+                let centerX = viewModel.canvasWidth / 2
+                let centerY = viewModel.canvasHeight / 2
+                let snapThreshold: CGFloat = 10
+
+                if abs(finalX - centerX) < snapThreshold {
+                    finalX = centerX
+                    HapticManager.selection()
+                }
+                if abs(finalY - centerY) < snapThreshold {
+                    finalY = centerY
+                    HapticManager.selection()
+                }
+
+                viewModel.updateElement(element.id) { el in
+                    el.position.x = finalX
+                    el.position.y = finalY
+                }
+                showAlignH = false
+                showAlignV = false
+            }
+
+        let magnifyGesture = MagnifyGesture(minimumScaleDelta: 0.01)
+            .updating($currentMagnification) { value, state, _ in
+                state = value.magnification
+            }
+            .updating($draggingElementId) { _, state, _ in
+                state = element.id
+            }
+            .onEnded { value in
+                viewModel.updateElement(element.id) { el in
+                    el.scale = max(0.1, min(el.scale * value.magnification, 5.0))
+                }
+            }
+
+        let rotateGesture = RotateGesture(minimumAngleDelta: .degrees(1))
+            .updating($currentRotation) { value, state, _ in
+                state = value.rotation
+            }
+            .updating($draggingElementId) { _, state, _ in
+                state = element.id
+            }
+            .onEnded { value in
+                viewModel.updateElement(element.id) { el in
+                    el.rotation += value.rotation.degrees
+                    let snapped = snapAngle(el.rotation)
+                    if abs(el.rotation - snapped) < 3 {
+                        el.rotation = snapped
+                        HapticManager.selection()
+                    }
+                }
+            }
+
         return Group {
             elementContent(element)
         }
         .frame(width: elW, height: elH)
         .scaleEffect(
-            x: element.scale * (element.flipX ? -1 : 1),
-            y: element.scale * (element.flipY ? -1 : 1)
+            x: element.scale * liveScale * (element.flipX ? -1 : 1),
+            y: element.scale * liveScale * (element.flipY ? -1 : 1)
         )
         .opacity(element.opacity)
+        .rotationEffect(.degrees(element.rotation + liveRotation))
         .overlay(
             isSelected ?
             SelectionHandlesOverlay(
                 width: elW * element.scale,
                 height: elH * element.scale,
-                onResizeCorner: { _, _ in },  // no live preview needed
+                onResizeCorner: { _, _ in },
                 onResizeEnd: { corner, translation in
-                    // Commit resize to ViewModel
                     let dx = translation.width / scaleX
                     let dy = translation.height / scaleY
                     viewModel.updateElement(element.id) { el in
@@ -380,10 +461,9 @@ struct CanvasEditorView: View {
             )
             : nil
         )
-        .rotationEffect(.degrees(element.rotation))
         .position(
-            x: element.position.x * scaleX + (currentDragId == element.id ? dragOffset.width : 0),
-            y: element.position.y * scaleY + (currentDragId == element.id ? dragOffset.height : 0)
+            x: element.position.x * scaleX + liveOffsetX,
+            y: element.position.y * scaleY + liveOffsetY
         )
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.15)) {
@@ -391,83 +471,9 @@ struct CanvasEditorView: View {
             }
             if element.type == .text { showTextEditor = true }
         }
-        .gesture(
-            element.isLocked ? nil :
-            DragGesture(minimumDistance: 4)
-                .onChanged { value in
-                    if !isSelected {
-                        viewModel.selectElement(element.id)
-                    }
-                    currentDragId = element.id
-                    dragOffset = value.translation
-                    
-                    let newX = element.position.x + value.translation.width / scaleX
-                    let newY = element.position.y + value.translation.height / scaleY
-                    let centerX = viewModel.canvasWidth / 2
-                    let centerY = viewModel.canvasHeight / 2
-                    let snapThreshold: CGFloat = 10
-                    
-                    showAlignV = abs(newX - centerX) < snapThreshold
-                    showAlignH = abs(newY - centerY) < snapThreshold
-                }
-                .onEnded { value in
-                    var finalX = element.position.x + value.translation.width / scaleX
-                    var finalY = element.position.y + value.translation.height / scaleY
-                    let centerX = viewModel.canvasWidth / 2
-                    let centerY = viewModel.canvasHeight / 2
-                    let snapThreshold: CGFloat = 10
-                    
-                    if abs(finalX - centerX) < snapThreshold {
-                        finalX = centerX
-                        HapticManager.selection()
-                    }
-                    if abs(finalY - centerY) < snapThreshold {
-                        finalY = centerY
-                        HapticManager.selection()
-                    }
-                    
-                    viewModel.updateElement(element.id) { el in
-                        el.position.x = finalX
-                        el.position.y = finalY
-                    }
-                    dragOffset = .zero
-                    currentDragId = nil
-                    showAlignH = false
-                    showAlignV = false
-                }
-        )
-        .simultaneousGesture(
-            element.isLocked ? nil :
-            MagnifyGesture(minimumScaleDelta: 0.01)
-                .onChanged { value in
-                    currentMagnification = value.magnification
-                }
-                .onEnded { value in
-                    viewModel.updateElement(element.id) { el in
-                        el.scale *= value.magnification
-                        el.scale = max(0.1, min(el.scale, 5.0))
-                    }
-                    currentMagnification = 1.0
-                }
-        )
-        .simultaneousGesture(
-            element.isLocked ? nil :
-            RotateGesture(minimumAngleDelta: .degrees(2))
-                .onChanged { value in
-                    currentRotation = value.rotation
-                }
-                .onEnded { value in
-                    viewModel.updateElement(element.id) { el in
-                        el.rotation += value.rotation.degrees
-                        let snapped = snapAngle(el.rotation)
-                        if abs(el.rotation - snapped) < 3 {
-                            el.rotation = snapped
-                            HapticManager.selection()
-                        }
-                    }
-                    currentRotation = .zero
-                }
-        )
+        .gesture(element.isLocked ? nil : dragGesture)
+        .simultaneousGesture(element.isLocked ? nil : magnifyGesture)
+        .simultaneousGesture(element.isLocked ? nil : rotateGesture)
     }
     
     /// Snap angle to nearest 0/90/180/270
