@@ -14,6 +14,9 @@ struct CanvasEditorView: View {
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @GestureState private var currentMagnification: CGFloat = 1.0
     @GestureState private var currentRotation: Angle = .zero
+    @State private var resizeCorner: SelectionHandlesOverlay.HandleCorner? = nil
+    @State private var resizeTranslation: CGSize = .zero
+    @State private var handleRotation: Angle = .zero
     @State private var showSaveConfirm = false
     @State private var selectedElementOpacity: Double = 1.0
     @State private var showReplacePicker = false
@@ -326,11 +329,31 @@ struct CanvasEditorView: View {
         let elH = element.size.height * scaleY
         let isDragging = draggingElementId == element.id
 
-        // Live transforms only applied to the dragged/pinched/rotated element
+        // Live transforms applied to the actively-manipulated element
         let liveScale = isDragging ? currentMagnification : 1.0
         let liveRotation = isDragging ? currentRotation.degrees : 0.0
         let liveOffsetX = isDragging ? dragTranslation.width : 0
         let liveOffsetY = isDragging ? dragTranslation.height : 0
+
+        // Live corner-resize → uniform scale from opposite corner anchor
+        let baseW = elW * element.scale
+        let baseH = elH * element.scale
+        let halfDiag = sqrt(baseW * baseW + baseH * baseH) / 2
+
+        let liveResizeScale: CGFloat = {
+            guard let c = resizeCorner, isSelected, halfDiag > 0 else { return 1.0 }
+            // Vector from element center to the dragged corner (in screen pts)
+            let cornerX: CGFloat = (c == .topLeft || c == .bottomLeft) ? -baseW / 2 : baseW / 2
+            let cornerY: CGFloat = (c == .topLeft || c == .topRight) ? -baseH / 2 : baseH / 2
+            // New corner position after translation
+            let newX = cornerX + resizeTranslation.width
+            let newY = cornerY + resizeTranslation.height
+            let newHalfDiag = sqrt(newX * newX + newY * newY)
+            return max(0.1, min(newHalfDiag / halfDiag, 8.0))
+        }()
+
+        // Live rotation handle preview
+        let liveHandleRotation = isSelected ? handleRotation.degrees : 0.0
 
         let dragGesture = DragGesture(minimumDistance: 0)
             .updating($dragTranslation) { value, state, _ in
@@ -340,7 +363,6 @@ struct CanvasEditorView: View {
                 state = element.id
             }
             .onChanged { value in
-                // Only update snap guides here (cheap @State writes)
                 let newX = element.position.x + value.translation.width / scaleX
                 let newY = element.position.y + value.translation.height / scaleY
                 let centerX = viewModel.canvasWidth / 2
@@ -357,7 +379,6 @@ struct CanvasEditorView: View {
                 let centerX = viewModel.canvasWidth / 2
                 let centerY = viewModel.canvasHeight / 2
                 let snapThreshold: CGFloat = 10
-
                 if abs(finalX - centerX) < snapThreshold {
                     finalX = centerX
                     HapticManager.selection()
@@ -366,7 +387,6 @@ struct CanvasEditorView: View {
                     finalY = centerY
                     HapticManager.selection()
                 }
-
                 viewModel.updateElement(element.id) { el in
                     el.position.x = finalX
                     el.position.y = finalY
@@ -411,43 +431,32 @@ struct CanvasEditorView: View {
         }
         .frame(width: elW, height: elH)
         .scaleEffect(
-            x: element.scale * liveScale * (element.flipX ? -1 : 1),
-            y: element.scale * liveScale * (element.flipY ? -1 : 1)
+            x: element.scale * liveScale * liveResizeScale * (element.flipX ? -1 : 1),
+            y: element.scale * liveScale * liveResizeScale * (element.flipY ? -1 : 1)
         )
         .opacity(element.opacity)
-        .rotationEffect(.degrees(element.rotation + liveRotation))
         .overlay(
-            isSelected ?
+            (isSelected && !element.isLocked && !isDragging) ?
             SelectionHandlesOverlay(
-                width: elW * element.scale,
-                height: elH * element.scale,
-                onResizeCorner: { _, _ in },
-                onResizeEnd: { corner, translation in
-                    let dx = translation.width / scaleX
-                    let dy = translation.height / scaleY
+                width: elW * element.scale * liveResizeScale,
+                height: elH * element.scale * liveResizeScale,
+                onResizeCorner: { corner, translation in
+                    resizeCorner = corner
+                    resizeTranslation = translation
+                },
+                onResizeEnd: { _, _ in
+                    // Commit the live scale factor we already computed
+                    let finalScale = liveResizeScale
                     viewModel.updateElement(element.id) { el in
-                        switch corner {
-                        case .bottomRight:
-                            el.size.width = max(30, el.size.width + dx)
-                            el.size.height = max(30, el.size.height + dy)
-                        case .bottomLeft:
-                            el.size.width = max(30, el.size.width - dx)
-                            el.size.height = max(30, el.size.height + dy)
-                            el.position.x += dx / 2
-                        case .topRight:
-                            el.size.width = max(30, el.size.width + dx)
-                            el.size.height = max(30, el.size.height - dy)
-                            el.position.y += dy / 2
-                        case .topLeft:
-                            el.size.width = max(30, el.size.width - dx)
-                            el.size.height = max(30, el.size.height - dy)
-                            el.position.x += dx / 2
-                            el.position.y += dy / 2
-                        }
+                        el.scale = max(0.1, min(el.scale * finalScale, 8.0))
                     }
+                    resizeCorner = nil
+                    resizeTranslation = .zero
                     HapticManager.selection()
                 },
-                onRotateDelta: { _ in },
+                onRotateDelta: { angle in
+                    handleRotation = angle
+                },
                 onRotateEnd: { angle in
                     viewModel.updateElement(element.id) { el in
                         el.rotation += angle.degrees
@@ -457,10 +466,12 @@ struct CanvasEditorView: View {
                             HapticManager.selection()
                         }
                     }
+                    handleRotation = .zero
                 }
             )
             : nil
         )
+        .rotationEffect(.degrees(element.rotation + liveRotation + liveHandleRotation))
         .position(
             x: element.position.x * scaleX + liveOffsetX,
             y: element.position.y * scaleY + liveOffsetY

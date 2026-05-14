@@ -174,7 +174,34 @@ class CanvasViewModel {
     func updateElement(_ id: UUID, update: (inout CanvasElement) -> Void) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
         guard !elements[index].isLocked else { return }
+
+        let before = elements[index]
         update(&elements[index])
+        let after = elements[index]
+
+        // Auto-refit text frame when text content or style changed (but not when only
+        // position/rotation/scale/size changed — those mean the user is moving/resizing).
+        if after.type == .text {
+            let textChanged = before.text != after.text
+            let styleChanged = before.textStyle != after.textStyle
+            let sizeUnchanged = before.size == after.size
+            if (textChanged || styleChanged) && sizeUnchanged {
+                if let text = after.text, let style = after.textStyle {
+                    elements[index].size = CanvasElement.measureText(text, style: style)
+                }
+            }
+        }
+    }
+    
+    /// Re-measures a text element's frame to fit its current text and style.
+    /// Call this after changing text content, font, size, weight, or letter spacing.
+    func refitTextFrame(_ id: UUID) {
+        guard let idx = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard elements[idx].type == .text,
+              let text = elements[idx].text,
+              let style = elements[idx].textStyle else { return }
+        let newSize = CanvasElement.measureText(text, style: style)
+        elements[idx].size = newSize
     }
     
     // MARK: - Layer Management

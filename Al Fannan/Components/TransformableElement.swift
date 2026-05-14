@@ -6,62 +6,65 @@ import SwiftUI
 struct SelectionHandlesOverlay: View {
     let width: CGFloat
     let height: CGFloat
-    let onResizeCorner: (HandleCorner, CGSize) -> Void   // corner, translation
-    let onResizeEnd: (HandleCorner, CGSize) -> Void       // corner, final translation
+    let onResizeCorner: (HandleCorner, CGSize) -> Void   // corner, translation in screen pts
+    let onResizeEnd: (HandleCorner, CGSize) -> Void
     let onRotateDelta: (Angle) -> Void
     let onRotateEnd: (Angle) -> Void
-    
+
     enum HandleCorner: CaseIterable {
         case topLeft, topRight, bottomLeft, bottomRight
     }
-    
+
     private let handleSize: CGFloat = 14
-    
+    private let rotationOffset: CGFloat = 32  // distance below element
+
     var body: some View {
         ZStack {
             // Bounding box
             Rectangle()
                 .strokeBorder(Color.red, lineWidth: 1.0)
                 .frame(width: width, height: height)
-            
+
             // Corner handles
             ForEach(HandleCorner.allCases, id: \.self) { corner in
                 cornerHandleView(corner)
             }
-            
-            // Rotation handle at top
+
+            // Rotation handle BELOW the element
             VStack(spacing: 0) {
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 16, height: 16)
-                    .overlay(
-                        Circle().strokeBorder(Color.red.opacity(0.5), lineWidth: 0.5)
-                    )
-                    .overlay(
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 7, weight: .bold))
-                            .foregroundColor(Color.red)
-                    )
-                    .shadow(color: .black.opacity(0.2), radius: 2)
-                    .gesture(rotateGesture)
-                
                 Rectangle()
                     .fill(Color.red.opacity(0.5))
                     .frame(width: 1, height: 12)
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 18, height: 18)
+                    .overlay(
+                        Circle().strokeBorder(Color.red.opacity(0.6), lineWidth: 0.5)
+                    )
+                    .overlay(
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(Color.red)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 2)
+                    .gesture(rotateGesture)
             }
-            .offset(y: -(height / 2 + 20))
+            .offset(y: height / 2 + rotationOffset)
         }
+        // Allow handles to extend outside the bounding box without being clipped
+        .frame(width: width, height: height)
     }
-    
+
     private func cornerHandleView(_ corner: HandleCorner) -> some View {
         let xOff: CGFloat = (corner == .topLeft || corner == .bottomLeft) ? -width / 2 : width / 2
         let yOff: CGFloat = (corner == .topLeft || corner == .topRight) ? -height / 2 : height / 2
-        
+
         return Circle()
             .fill(Color.white)
             .frame(width: handleSize, height: handleSize)
             .overlay(
-                Circle().strokeBorder(Color.red.opacity(0.3), lineWidth: 0.5)
+                Circle().strokeBorder(Color.red.opacity(0.4), lineWidth: 0.5)
             )
             .shadow(color: .black.opacity(0.2), radius: 2)
             .offset(x: xOff, y: yOff)
@@ -75,17 +78,16 @@ struct SelectionHandlesOverlay: View {
                     }
             )
     }
-    
+
     private var rotateGesture: some Gesture {
-        DragGesture(minimumDistance: 2)
+        DragGesture(minimumDistance: 0)
             .onChanged { value in
-                // Use horizontal drag distance as rotation (more intuitive on phone)
-                let angle = Angle.degrees(Double(value.translation.width) * 0.5)
-                onRotateDelta(angle)
+                let raw = Double(value.translation.width) * 0.3
+                onRotateDelta(Angle.degrees(raw))
             }
             .onEnded { value in
-                let angle = Angle.degrees(Double(value.translation.width) * 0.5)
-                onRotateEnd(angle)
+                let raw = Double(value.translation.width) * 0.3
+                onRotateEnd(Angle.degrees(raw))
             }
     }
 }

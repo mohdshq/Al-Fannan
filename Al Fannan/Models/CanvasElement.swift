@@ -233,14 +233,82 @@ struct CanvasElement: Identifiable, Codable, Equatable {
 
     // Factory helpers
     static func textElement(_ text: String, isArabic: Bool = false) -> CanvasElement {
-        var el = CanvasElement(type: .text, name: "Text", size: CGSize(width: 250, height: 80))
-        el.text = text
         var style = TextStyle()
         style.isRTL = isArabic
         style.fontSize = isArabic ? 28 : 24
+        let size = CanvasElement.measureText(text, style: style)
+        var el = CanvasElement(type: .text, name: "Text", size: size)
+        el.text = text
         el.textStyle = style
         return el
     }
+
+    /// Measures a text's rendered size in canvas coordinates.
+    /// The canvas renders text at 0.4x the style's fontSize, so we measure at the same scale
+    /// and divide back, giving a frame that hugs the text in canvas space.
+    static func measureText(_ text: String, style: TextStyle) -> CGSize {
+        let renderedFontSize = style.fontSize
+
+        let uiFont: UIFont = {
+            if let custom = UIFont(name: style.fontName, size: renderedFontSize) {
+                return custom
+            }
+            var f = UIFont.systemFont(ofSize: renderedFontSize, weight: style.isBold ? .bold : .regular)
+            if style.isItalic, let descriptor = f.fontDescriptor.withSymbolicTraits(.traitItalic) {
+                f = UIFont(descriptor: descriptor, size: renderedFontSize)
+            }
+            return f
+        }()
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = style.lineSpacing
+        paragraphStyle.alignment = .center
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: uiFont,
+            .kern: style.letterSpacing,
+            .paragraphStyle: paragraphStyle
+        ]
+        let measureText = text.isEmpty ? " " : text
+        let attributed = NSAttributedString(string: measureText, attributes: attributes)
+        let bounding = attributed.boundingRect(
+            with: CGSize(width: 2000, height: CGFloat.greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading, .usesDeviceMetrics],
+            context: nil
+        )
+
+        // SwiftUI Text adds extra vertical padding for ascender/descender beyond what
+        // boundingRect reports. Inflate width by ~15% and height by ~40% to match.
+        let widthInflation: CGFloat = 1.35
+        let heightInflation: CGFloat = 1.4
+        let paddingX: CGFloat = 32
+        let paddingY: CGFloat = 16
+        var canvasW = ceil(bounding.width * widthInflation) + paddingX
+        var canvasH = ceil(bounding.height * heightInflation) + paddingY
+
+        // Curved text: the text follows an arc, so the bounding box must grow.
+        if abs(style.curveAngle) > 1 {
+            let angle = min(abs(style.curveAngle), 360)
+            let angleRad = angle * .pi / 180
+            let textArcLength = bounding.width * widthInflation
+            let textThickness = bounding.height * heightInflation
+            let radius = textArcLength / angleRad
+
+            // Conservative bounding: full diameter + glyph thickness on both sides.
+            // This always contains the arc regardless of which direction it bows.
+            let diameter = 2 * radius + 2 * textThickness
+            canvasW = max(canvasW, ceil(diameter) + paddingX)
+            canvasH = max(canvasH, ceil(diameter) + paddingY)
+        }
+
+        return CGSize(
+            width: max(40, canvasW),
+            height: max(30, canvasH)
+        )
+
+
+    }
+
 
     static func imageElement(_ name: String) -> CanvasElement {
         var el = CanvasElement(type: .image, name: "Image", size: CGSize(width: 200, height: 200))
