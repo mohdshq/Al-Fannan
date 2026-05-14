@@ -134,6 +134,7 @@ class CanvasViewModel {
     }
     
     func removeElement(_ id: UUID) {
+        guard !isElementLocked(id) else { return }
         saveState()
         elements.removeAll(where: { $0.id == id })
         selectedElementIds.remove(id)
@@ -141,6 +142,7 @@ class CanvasViewModel {
     
     func duplicateElement(_ id: UUID) {
         guard let element = elements.first(where: { $0.id == id }) else { return }
+        guard !element.isLocked else { return }
         saveState()
         var copy = element                                      // value-type copy: all fields preserved
         copy.id = UUID()                                        // unique identity
@@ -171,30 +173,35 @@ class CanvasViewModel {
     
     func updateElement(_ id: UUID, update: (inout CanvasElement) -> Void) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard !elements[index].isLocked else { return }
         update(&elements[index])
     }
     
     // MARK: - Layer Management
     func moveElementUp(_ id: UUID) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard !elements[index].isLocked else { return }
         saveState()
         elements[index].zIndex += 1
     }
     
     func moveElementDown(_ id: UUID) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard !elements[index].isLocked else { return }
         saveState()
         elements[index].zIndex -= 1
     }
     
     func moveToFront(_ id: UUID) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard !elements[index].isLocked else { return }
         saveState()
         elements[index].zIndex = (elements.map(\.zIndex).max() ?? 0) + 1
     }
     
     func moveToBack(_ id: UUID) {
         guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        guard !elements[index].isLocked else { return }
         saveState()
         elements[index].zIndex = (elements.map(\.zIndex).min() ?? 0) - 1
     }
@@ -256,7 +263,8 @@ class CanvasViewModel {
     // MARK: - Element Replacement
     func replaceImage(_ id: UUID, with newImage: UIImage) {
         guard let index = elements.firstIndex(where: { $0.id == id }),
-              elements[index].type == .image else { return }
+              elements[index].type == .image,
+              !elements[index].isLocked else { return }
         saveState()
         let aspect = newImage.size.width / newImage.size.height
         let maxDim: CGFloat = min(canvasWidth, canvasHeight) * 0.6
@@ -376,5 +384,10 @@ class CanvasViewModel {
         undoStack.removeAll()
         redoStack.removeAll()
     }
+    // MARK: - Lock Helpers
 
+    /// Returns true if the element with this id exists and is locked.
+    private func isElementLocked(_ id: UUID) -> Bool {
+        elements.first(where: { $0.id == id })?.isLocked ?? false
+    }
 }

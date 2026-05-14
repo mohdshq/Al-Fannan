@@ -102,11 +102,19 @@ struct ElementQuickActions: View {
     var body: some View {
         HStack(spacing: 2) {
             quickButton(icon: "doc.on.doc", tip: "Copy") { onDuplicate() }
+                .disabled(isLocked)
+                .opacity(isLocked ? 0.35 : 1)
             quickButton(icon: "arrow.left.and.right.righttriangle.left.righttriangle.right", tip: "Flip H") { onFlipH() }
+                .disabled(isLocked)
+                .opacity(isLocked ? 0.35 : 1)
             quickButton(icon: "arrow.up.and.down.righttriangle.up.righttriangle.down", tip: "Flip V") { onFlipV() }
+                .disabled(isLocked)
+                .opacity(isLocked ? 0.35 : 1)
             quickButton(icon: isLocked ? "lock.fill" : "lock.open", tip: isLocked ? "Unlock" : "Lock") { onLock() }
             Divider().frame(height: 16).opacity(0.3)
             quickButton(icon: "trash", tip: "Delete", isDestructive: true) { onDelete() }
+                .disabled(isLocked)
+                .opacity(isLocked ? 0.35 : 1)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
