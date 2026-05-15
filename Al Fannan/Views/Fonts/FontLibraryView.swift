@@ -1,12 +1,14 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct FontLibraryView: View {
     @State private var searchText = ""
     @State private var selectedCategory: FontItem.FontCategory? = nil
     @State private var showImportSheet = false
+    @State private var showFontImporter = false
     
     private var filteredFonts: [FontItem] {
-        var fonts = FontItem.sampleFonts
+        var fonts = FontManager.shared.allFonts
         if let cat = selectedCategory {
             fonts = fonts.filter { $0.category == cat }
         }
@@ -25,11 +27,11 @@ struct FontLibraryView: View {
                 // Category selector
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: DS.Spacing.xs) {
-                        categoryChip("All (\(FontItem.sampleFonts.count))", isSelected: selectedCategory == nil) {
+                        categoryChip("All (\(FontManager.shared.allFonts.count))", isSelected: selectedCategory == nil) {
                             selectedCategory = nil
                         }
                         ForEach(FontItem.FontCategory.allCases, id: \.self) { cat in
-                            categoryChip("\(cat.rawValue) (\(FontItem.fonts(for: cat).count))", isSelected: selectedCategory == cat) {
+                            categoryChip("\(cat.rawValue) (\(FontManager.shared.allFonts.filter { $0.category == cat }.count))", isSelected: selectedCategory == cat) {
                                 selectedCategory = cat
                             }
                         }
@@ -67,10 +69,27 @@ struct FontLibraryView: View {
                 }
             }
             .alert("Import Custom Font", isPresented: $showImportSheet) {
-                Button("Choose OTF/TTF File") {}
+                Button("Choose OTF/TTF File") {
+                    showFontImporter = true
+                }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Import your own OTF or TTF font files to use in your designs.")
+            }
+            .fileImporter(
+                isPresented: $showFontImporter,
+                allowedContentTypes: [.font],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    if let url = urls.first {
+                        FontManager.shared.importFont(from: url)
+                        HapticManager.success()
+                    }
+                case .failure(let error):
+                    print("Error importing font: \(error)")
+                }
             }
         }
     }

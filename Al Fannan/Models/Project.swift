@@ -61,148 +61,108 @@ struct FontItem: Identifiable, Hashable {
     
     static let sampleFonts: [FontItem] = {
         var fonts: [FontItem] = []
-        
+
         // ══════════════════════════════════════
-        // MARK: Arabic Fonts (24)
+        // MARK: Arabic Modern (bundled Google Fonts)
         // ══════════════════════════════════════
-        let arabicFonts: [(String, String, String, Bool)] = [
+        let arabicModern: [(String, String, String, Bool)] = [
             // (PostScript name, displayName, displayNameAr, isPro)
-            ("GeezaPro",               "Geeza Pro",            "جيزا برو",       false),
-            ("GeezaPro-Bold",          "Geeza Pro Bold",       "جيزا برو عريض",  false),
-            ("Damascus",               "Damascus",             "دمشق",           false),
-            ("DamascusBold",           "Damascus Bold",        "دمشق عريض",      false),
-            ("DamascusLight",          "Damascus Light",       "دمشق خفيف",      false),
-            ("DamascusMedium",         "Damascus Medium",      "دمشق وسط",       false),
-            ("DamascusSemiBold",       "Damascus SemiBold",    "دمشق نصف عريض",  false),
-            ("Baghdad",                "Baghdad",              "بغداد",           false),
-            ("Farah",                  "Farah",                "فرح",             false),
-            ("Nadeem",                 "Nadeem",               "نديم",            false),
-            ("AlNile",                 "Al Nile",              "النيل",           false),
-            ("AlNile-Bold",            "Al Nile Bold",         "النيل عريض",     false),
-            ("AlBayan",                "Al Bayan",             "البيان",          false),
-            ("AlBayan-Bold",           "Al Bayan Bold",        "البيان عريض",    false),
-            ("AlTarikh",               "Al Tarikh",            "التاريخ",         false),
-            ("Waseem",                 "Waseem",               "وسيم",            false),
-            ("WaseemLight",            "Waseem Light",         "وسيم خفيف",      false),
-            ("Muna",                   "Muna",                 "منى",             false),
-            ("MunaBold",               "Muna Bold",            "منى عريض",       false),
-            ("Sana",                   "Sana",                 "سنا",             false),
-            ("Mishafi",                "Mishafi",              "مشافي",           false),
-            ("MishafiGold",            "Mishafi Gold",         "مشافي ذهبي",     true),
-            ("KacstOne",               "KACST One",            "كاكست",           false),
-            ("Diwan Mishafi",          "Diwan Mishafi",        "ديوان مشافي",    true),
+            ("Cairo-Regular",       "Cairo",          "القاهرة",      false),
+            ("Tajawal-Regular",     "Tajawal",        "تجوال",        false),
+            ("Tajawal-Bold",        "Tajawal Bold",   "تجوال عريض",  false),
+            ("Almarai-Regular",     "Almarai",        "المراعي",      false),
+            ("Almarai-Bold",        "Almarai Bold",   "المراعي عريض", false),
+            ("ElMessiri-Regular",   "El Messiri",     "المسيري",      false),
         ]
-        for (name, display, displayAr, pro) in arabicFonts {
+        for (name, display, displayAr, pro) in arabicModern {
             fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: true, isPro: pro, category: .arabic, previewText: "بسم الله الرحمن الرحيم"))
         }
-        
+
         // ══════════════════════════════════════
-        // MARK: Calligraphy & Naskh (10)
+        // MARK: Arabic Calligraphy & Naskh (bundled)
         // ══════════════════════════════════════
-        let calligraphyFonts: [(String, String, String, Bool)] = [
-            ("KufiStandardGK",         "Kufi Standard",        "كوفي",            false),
-            ("DecoTypeNaskh",          "Naskh",                "نسخ",             false),
-            ("DevanagariSangamMN",     "Devanagari Sangam",    "ديفاناغري",       true),
-            ("NotoNastaliqUrdu",       "Noto Nastaliq",        "نستعليق",         true),
-            ("Diwan Kufi",             "Diwan Kufi",           "ديوان كوفي",      true),
-            ("Diwan Thuluth",          "Diwan Thuluth",        "ديوان ثلث",       true),
-            ("Kohinoor Devanagari",    "Kohinoor",             "كوهينور",         true),
-            ("ArialHebrew",            "Arial Hebrew",         "أريال عبري",      false),
-            ("ArialHebrew-Bold",       "Arial Hebrew Bold",    "أريال عبري عريض", false),
-            ("EuphemiaUCAS",           "Euphemia",             "يوفيميا",         false),
+        let arabicCalligraphy: [(String, String, String, Bool)] = [
+            ("Amiri-Regular",            "Amiri",            "أميري",          false),
+            ("Amiri-Bold",               "Amiri Bold",       "أميري عريض",     false),
+            ("ReemKufi",                 "Reem Kufi",        "ريم كوفي",       false),
+            ("ArefRuqaa-Regular",        "Aref Ruqaa",       "عارف رقعة",      false),
+            ("Lateef-Regular",           "Lateef",           "لطيف",            false),
+            ("MarkaziText-Regular",      "Markazi Text",     "مركزي",          false),
+            ("ScheherazadeNew-Regular",  "Scheherazade",     "شهرزاد",         false),
         ]
-        for (name, display, displayAr, pro) in calligraphyFonts {
+        for (name, display, displayAr, pro) in arabicCalligraphy {
             fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: true, isPro: pro, category: .calligraphy, previewText: "صمّم بإبداع"))
         }
-        
+
         // ══════════════════════════════════════
-        // MARK: Modern English Fonts (20)
+        // MARK: System Arabic (iOS built-in, always available)
         // ══════════════════════════════════════
-        let modernFonts: [(String, String, String, Bool)] = [
-            ("System",                 "System Default",       "النظام",           false),
-            ("Helvetica",              "Helvetica",            "هلفيتيكا",         false),
-            ("HelveticaNeue",          "Helvetica Neue",       "هلفيتيكا نيو",    false),
-            ("HelveticaNeue-Bold",     "Helvetica Neue Bold",  "هلفيتيكا عريض",   false),
-            ("HelveticaNeue-Light",    "Helvetica Neue Light", "هلفيتيكا خفيف",   false),
-            ("HelveticaNeue-Thin",     "Helvetica Neue Thin",  "هلفيتيكا رفيع",   false),
-            ("HelveticaNeue-UltraLight","Helvetica Ultra Light","هلفيتيكا فائق",   false),
-            ("AvenirNext-Regular",     "Avenir Next",          "أفينير",           false),
-            ("AvenirNext-Bold",        "Avenir Next Bold",     "أفينير عريض",     false),
-            ("AvenirNext-Medium",      "Avenir Next Medium",   "أفينير وسط",      false),
-            ("AvenirNext-DemiBold",    "Avenir Next DemiBold", "أفينير نصف عريض", false),
-            ("AvenirNext-UltraLight",  "Avenir Next UltraLight","أفينير فائق",    false),
-            ("Futura-Medium",          "Futura",               "فيوتشرا",         false),
-            ("Futura-Bold",            "Futura Bold",          "فيوتشرا عريض",   false),
-            ("Futura-CondensedMedium", "Futura Condensed",     "فيوتشرا ضيق",    false),
-            ("SFProDisplay-Regular",   "SF Pro Display",       "سان فرانسيسكو",   false),
-            ("SFProText-Regular",      "SF Pro Text",          "سان فرانسيسكو نص",false),
-            ("GillSans",               "Gill Sans",            "غيل سانس",        false),
-            ("GillSans-Bold",          "Gill Sans Bold",       "غيل سانس عريض",  false),
-            ("GillSans-Light",         "Gill Sans Light",      "غيل سانس خفيف",  false),
+        let systemArabic: [(String, String, String, Bool)] = [
+            ("GeezaPro",        "Geeza Pro",       "جيزا برو",       false),
+            ("GeezaPro-Bold",   "Geeza Pro Bold",  "جيزا برو عريض",  false),
+            ("Damascus",        "Damascus",        "دمشق",            false),
+            ("DamascusBold",    "Damascus Bold",   "دمشق عريض",      false),
+            ("Baghdad",         "Baghdad",         "بغداد",           false),
+            ("AlNile",          "Al Nile",         "النيل",           false),
+            ("AlNile-Bold",     "Al Nile Bold",    "النيل عريض",     false),
+            ("AlBayan",         "Al Bayan",        "البيان",          false),
+            ("AlBayan-Bold",    "Al Bayan Bold",   "البيان عريض",    false),
+            ("KufiStandardGK",  "Kufi Standard",   "كوفي",            false),
+            ("DecoTypeNaskh",   "Naskh",           "نسخ",             false),
+            ("Farah",           "Farah",           "فرح",             false),
         ]
-        for (name, display, displayAr, pro) in modernFonts {
-            fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: false, isPro: pro, category: .modern, previewText: "Hello World"))
+        for (name, display, displayAr, pro) in systemArabic {
+            fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: true, isPro: pro, category: .arabic, previewText: "بسم الله الرحمن الرحيم"))
         }
-        
+
         // ══════════════════════════════════════
-        // MARK: Classic / Serif English Fonts (14)
+        // MARK: English Modern (iOS built-in)
         // ══════════════════════════════════════
-        let classicFonts: [(String, String, String, Bool)] = [
-            ("Georgia",                "Georgia",              "جورجيا",           false),
-            ("Georgia-Bold",           "Georgia Bold",         "جورجيا عريض",     false),
-            ("Georgia-Italic",         "Georgia Italic",       "جورجيا مائل",     false),
-            ("TimesNewRomanPSMT",      "Times New Roman",      "تايمز نيو رومان", false),
-            ("TimesNewRomanPS-BoldMT", "Times New Roman Bold", "تايمز عريض",      false),
-            ("Baskerville",            "Baskerville",          "باسكرفيل",        false),
-            ("Baskerville-Bold",       "Baskerville Bold",     "باسكرفيل عريض",  false),
-            ("Palatino-Roman",         "Palatino",             "بالاتينو",        false),
-            ("Palatino-Bold",          "Palatino Bold",        "بالاتينو عريض",  false),
-            ("Didot",                  "Didot",                "ديدو",            false),
-            ("Didot-Bold",             "Didot Bold",           "ديدو عريض",      false),
-            ("Cochin",                 "Cochin",               "كوشين",           false),
-            ("BodoniSvtyTwoITCTT-Book","Bodoni 72",            "بودوني",          true),
-            ("Optima-Regular",         "Optima",               "أوبتيما",         false),
+        let english: [(String, String, String, Bool)] = [
+            ("System",                  "System Default",       "النظام",            false),
+            ("HelveticaNeue",           "Helvetica Neue",       "هلفيتيكا",         false),
+            ("HelveticaNeue-Bold",      "Helvetica Bold",       "هلفيتيكا عريض",    false),
+            ("HelveticaNeue-Light",     "Helvetica Light",      "هلفيتيكا خفيف",    false),
+            ("AvenirNext-Regular",      "Avenir Next",          "أفينير",            false),
+            ("AvenirNext-Bold",         "Avenir Next Bold",     "أفينير عريض",      false),
+            ("AvenirNext-Medium",       "Avenir Next Medium",   "أفينير وسط",       false),
+            ("Futura-Medium",           "Futura",               "فيوتشرا",          false),
+            ("Futura-Bold",             "Futura Bold",          "فيوتشرا عريض",    false),
+            ("GillSans",                "Gill Sans",            "غيل سانس",         false),
+            ("GillSans-Bold",           "Gill Sans Bold",       "غيل سانس عريض",   false),
+            ("Georgia",                 "Georgia",              "جورجيا",           false),
+            ("Georgia-Bold",            "Georgia Bold",         "جورجيا عريض",     false),
+            ("TimesNewRomanPSMT",       "Times New Roman",      "تايمز",            false),
+            ("Baskerville",             "Baskerville",          "باسكرفيل",         false),
+            ("Palatino-Roman",          "Palatino",             "بالاتينو",         false),
+            ("Didot",                   "Didot",                "ديدو",             false),
+            ("Cochin",                  "Cochin",               "كوشين",            false),
+            ("Optima-Regular",          "Optima",               "أوبتيما",          false),
+            ("AmericanTypewriter",      "Typewriter",           "آلة كاتبة",        false),
         ]
-        for (name, display, displayAr, pro) in classicFonts {
+        for (name, display, displayAr, pro) in english {
             fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: false, isPro: pro, category: .english, previewText: "The Quick Brown Fox"))
         }
-        
+
         // ══════════════════════════════════════
-        // MARK: Decorative Fonts (10)
+        // MARK: Decorative & Handwriting (iOS built-in)
         // ══════════════════════════════════════
-        let decorativeFonts: [(String, String, String, Bool)] = [
-            ("Copperplate",            "Copperplate",          "كوبربليت",        false),
-            ("Copperplate-Bold",       "Copperplate Bold",     "كوبربليت عريض",  false),
-            ("Papyrus",                "Papyrus",              "بردي",            false),
-            ("PartyLetPlain",          "Party LET",            "حفلة",            true),
-            ("SnellRoundhand",         "Snell Roundhand",      "سنيل",            true),
-            ("SnellRoundhand-Bold",    "Snell Roundhand Bold", "سنيل عريض",      true),
-            ("AmericanTypewriter",     "American Typewriter",  "آلة كاتبة",       false),
-            ("AmericanTypewriter-Bold","Typewriter Bold",      "آلة كاتبة عريض",  false),
-            ("Rockwell-Regular",       "Rockwell",             "روكويل",          false),
-            ("IowanOldStyle-Roman",    "Iowan Old Style",      "آيوان",           false),
+        let decorative: [(String, String, String, Bool)] = [
+            ("SnellRoundhand",          "Snell Roundhand",      "سنيل",             false),
+            ("SnellRoundhand-Bold",     "Snell Bold",           "سنيل عريض",       false),
+            ("Copperplate",             "Copperplate",          "كوبربليت",         false),
+            ("Papyrus",                 "Papyrus",              "بردي",             false),
+            ("MarkerFelt-Thin",         "Marker Felt",          "ماركر",            false),
+            ("MarkerFelt-Wide",         "Marker Wide",          "ماركر عريض",      false),
+            ("BradleyHandITCTT-Bold",   "Bradley Hand",         "برادلي",           false),
+            ("Chalkduster",             "Chalkduster",          "طباشير",           false),
+            ("ChalkboardSE-Regular",    "Chalkboard",           "سبورة",            false),
+            ("Noteworthy-Bold",         "Noteworthy",           "ملاحظات",         false),
         ]
-        for (name, display, displayAr, pro) in decorativeFonts {
+        for (name, display, displayAr, pro) in decorative {
             fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: false, isPro: pro, category: .decorative, previewText: "Creative Design"))
         }
-        
-        // ══════════════════════════════════════
-        // MARK: Handwriting Fonts (8)
-        // ══════════════════════════════════════
-        let handwritingFonts: [(String, String, String, Bool)] = [
-            ("MarkerFelt-Thin",        "Marker Felt Thin",     "ماركر رفيع",      false),
-            ("MarkerFelt-Wide",        "Marker Felt Wide",     "ماركر عريض",      false),
-            ("BradleyHandITCTT-Bold",  "Bradley Hand",         "برادلي",          false),
-            ("Chalkduster",            "Chalkduster",          "طباشير",          false),
-            ("ChalkboardSE-Regular",   "Chalkboard SE",        "سبورة",           false),
-            ("ChalkboardSE-Bold",      "Chalkboard SE Bold",   "سبورة عريض",     false),
-            ("Noteworthy-Bold",        "Noteworthy Bold",      "ملاحظات عريض",   false),
-            ("Noteworthy-Light",       "Noteworthy Light",     "ملاحظات خفيف",   false),
-        ]
-        for (name, display, displayAr, pro) in handwritingFonts {
-            fonts.append(FontItem(name: name, displayName: display, displayNameAr: displayAr, isArabic: false, isPro: pro, category: .handwriting, previewText: "Handwritten Style"))
-        }
-        
+
         return fonts
     }()
     

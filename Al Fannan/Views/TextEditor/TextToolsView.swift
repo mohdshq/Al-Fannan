@@ -51,7 +51,6 @@ struct TextToolsView: View {
                     ScrollView { editTab }
                 case .font:
                     fontTab
-                        .onAppear { FontManager.shared.ensureSystemFontsLoaded() }
                 case .style:
                     ScrollView { styleTab }
                 case .effects:

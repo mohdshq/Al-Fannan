@@ -4,7 +4,7 @@ import SwiftUI
 struct Al_FannanApp: App {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var showOnboarding = false
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -23,3 +23,4 @@ struct Al_FannanApp: App {
         }
     }
 }
+
