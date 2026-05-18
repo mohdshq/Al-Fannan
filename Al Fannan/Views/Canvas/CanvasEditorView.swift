@@ -660,6 +660,7 @@ struct CanvasEditorView: View {
                 editorToolButton(icon: "textformat", label: "Text", panel: .text)
                 editorToolButton(icon: "photo", label: "Photo", panel: .photo)
                 editorToolButton(icon: "face.smiling", label: "Stickers", panel: .stickers)
+                editorToolButton(icon: "textformat.alt", label: "Calligraphy", panel: .calligraphy)
                 editorToolButton(icon: "square.on.circle", label: "Shapes", panel: .shapes)
                 editorToolButton(icon: "paintbrush", label: "Background", panel: .background)
                 editorToolButton(icon: "wand.and.stars", label: "Filters", panel: .filters)
@@ -845,6 +846,8 @@ struct CanvasEditorView: View {
                 photoToolPanel
             case .stickers:
                 stickerToolPanel
+            case .calligraphy:
+                calligraphyToolPanel
             case .shapes:
                 shapesToolPanel
             case .background:
@@ -967,6 +970,37 @@ struct CanvasEditorView: View {
         }
     }
     
+    private var calligraphyToolPanel: some View {
+        ScrollView {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: DS.Spacing.sm), count: 2), spacing: DS.Spacing.sm) {
+                ForEach(CalligraphyPreset.presets) { preset in
+                    Button {
+                        viewModel.addCalligraphy(preset)
+                        HapticManager.selection()
+                    } label: {
+                        Text(preset.text)
+                            .font(.custom(preset.fontName, size: 22))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: preset.gradientColors.map { Color(hex: $0) },
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .padding(.horizontal, DS.Spacing.sm)
+                            .background(DS.Colors.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                            .environment(\.layoutDirection, .rightToLeft)
+                    }
+                }
+            }
+            .padding(DS.Spacing.md)
+        }
+    }
+
     private var stickerToolPanel: some View {
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: DS.Spacing.sm), count: 6), spacing: DS.Spacing.sm) {
@@ -1636,7 +1670,7 @@ extension View {
 
 // MARK: - Editor Tool Panel Enum
 enum EditorToolPanel: Equatable {
-    case text, photo, stickers, shapes, background, filters, effects
+    case text, photo, calligraphy, stickers, shapes, background, filters, effects
     case opacity, mask, textFill
 }
 

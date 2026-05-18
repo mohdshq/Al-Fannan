@@ -206,14 +206,12 @@ struct StickerItem: Identifiable, Hashable {
         var stickers: [StickerItem] = []
         let emojiIcons = ["face.smiling", "hand.thumbsup", "heart.fill", "star.fill", "sun.max.fill", "moon.fill", "cloud.fill", "bolt.fill"]
         let islamicIcons = ["moon.stars.fill", "sparkles", "star.circle.fill", "sun.haze.fill", "moon.haze.fill", "light.beacon.max"]
-        let calligraphyIcons = ["Calligraphy_Bismillah", "Calligraphy_Allah", "Calligraphy_Muhammad", "Calligraphy_Mashallah", "Calligraphy_Subhanallah", "Calligraphy_Alhamdulillah"]
         let celebrationIcons = ["party.popper.fill", "gift.fill", "balloon.fill", "fireworks", "trophy.fill", "medal.fill"]
         let natureIcons = ["leaf.fill", "tree.fill", "drop.fill", "flame.fill", "snowflake", "wind"]
         let businessIcons = ["briefcase.fill", "chart.bar.fill", "dollarsign.circle.fill", "building.2.fill", "phone.fill", "envelope.fill"]
         
         for icon in emojiIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .emoji, isPro: false)) }
         for icon in islamicIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .islamic, isPro: false)) }
-        for icon in calligraphyIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .calligraphy, isPro: false)) }
         for icon in celebrationIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .celebration, isPro: false)) }
         for icon in natureIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .nature, isPro: false)) }
         for icon in businessIcons { stickers.append(StickerItem(name: icon, systemIcon: icon, category: .business, isPro: true)) }

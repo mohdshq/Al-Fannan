@@ -290,12 +290,15 @@ struct CanvasElement: Identifiable, Codable, Equatable {
         if abs(style.curveAngle) > 1 {
             let angle = min(abs(style.curveAngle), 360)
             let angleRad = angle * .pi / 180
-            let textArcLength = bounding.width * widthInflation
-            let textThickness = bounding.height * heightInflation
+
+            // The canvas renders at 0.4× the measured fontSize, so the actual
+            // arc length on screen is 0.4× of what boundingRect reports.
+            let renderScale: CGFloat = 0.4
+            let textArcLength = bounding.width * renderScale
+            let textThickness = bounding.height * renderScale
             let radius = textArcLength / angleRad
 
             // Conservative bounding: full diameter + glyph thickness on both sides.
-            // This always contains the arc regardless of which direction it bows.
             let diameter = 2 * radius + 2 * textThickness
             canvasW = max(canvasW, ceil(diameter) + paddingX)
             canvasH = max(canvasH, ceil(diameter) + paddingY)

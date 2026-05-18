@@ -50,6 +50,33 @@ class CanvasViewModel {
         addElement(element)
     }
     
+    func addCalligraphy(_ preset: CalligraphyPreset) {
+        var style = TextStyle(
+            fontName: preset.fontName,
+            fontSize: preset.fontSize,
+            textColor: "#D4A853",
+            alignment: .center,
+            isRTL: true
+        )
+        style.fillType = .gradient
+        style.gradientColors = preset.gradientColors
+        style.gradientAngle = 90
+        style.curveAngle = preset.curveAngle
+
+        let size = CanvasElement.measureText(preset.text, style: style)
+
+        var element = CanvasElement(
+            type: .text,
+            name: "Calligraphy",
+            position: CGPoint(x: canvasWidth / 2, y: canvasHeight / 2),
+            size: size
+        )
+        element.text = preset.text
+        element.textStyle = style
+
+        addElement(element)
+    }
+    
     func addImage(_ image: UIImage) {
         var el = CanvasElement(
             type: .image,
