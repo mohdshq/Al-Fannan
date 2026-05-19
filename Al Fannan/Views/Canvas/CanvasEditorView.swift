@@ -748,6 +748,23 @@ struct CanvasEditorView: View {
                         }
                     }
                     
+                    // Shape Style (for shapes only)
+                    if viewModel.selectedElement?.type == .shape {
+                        Button {
+                            withAnimation(AnimationPreset.springSnappy) {
+                                activeToolPanel = activeToolPanel == .shapeStyle ? nil : .shapeStyle
+                            }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "paintpalette.fill")
+                                    .font(.system(size: 20))
+                                Text("Style")
+                                    .font(.system(size: 10))
+                            }
+                            .foregroundColor(activeToolPanel == .shapeStyle ? DS.Colors.primary : DS.Colors.textSecondary)
+                        }
+                    }
+                    
                     // Text Fill (for text only)
                     if viewModel.selectedElement?.type == .text {
                         Button {
@@ -862,6 +879,8 @@ struct CanvasEditorView: View {
                 maskToolPanel
             case .textFill:
                 textFillToolPanel
+            case .shapeStyle:
+                shapeStyleToolPanel
             }
         }
         .frame(height: 200)
@@ -1556,6 +1575,97 @@ struct CanvasEditorView: View {
         .padding(DS.Spacing.md)
     }
     
+    // MARK: - Shape Style Tool Panel
+    private var shapeStyleToolPanel: some View {
+        VStack(spacing: DS.Spacing.sm) {
+            HStack {
+                Image(systemName: "paintpalette.fill")
+                    .foregroundColor(DS.Colors.primary)
+                Text("Shape Style")
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundColor(DS.Colors.textPrimary)
+                Spacer()
+                if let style = viewModel.selectedElement?.shapeStyle {
+                    Circle()
+                        .fill(Color(hex: style.fillColor))
+                        .frame(width: 20, height: 20)
+                        .overlay(Circle().stroke(DS.Colors.surfaceBorder, lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.top, DS.Spacing.sm)
+
+            // Color swatches
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.Spacing.sm) {
+                    let palette: [String] = [
+                        "D4A853", "F0D48A", "8B6914",          // golds
+                        "FFFFFF", "000000", "F5F5DC",          // neutrals
+                        "1A237E", "0C2340", "4A0E4E",          // deep blues/purples
+                        "2E7D32", "8B4513", "E8734A",          // earth tones
+                        "FF6B8A", "AF52DE", "5AC8FA",          // accents
+                        "C62828", "00897B", "FFB300"
+                    ]
+                    ForEach(palette, id: \.self) { hex in
+                        let isActive = viewModel.selectedElement?.shapeStyle?.fillColor.uppercased() == hex.uppercased()
+                        Button {
+                            if let id = viewModel.selectedElement?.id {
+                                viewModel.updateElement(id) { el in
+                                    el.shapeStyle?.fillColor = hex
+                                }
+                                HapticManager.selection()
+                            }
+                        } label: {
+                            Circle()
+                                .fill(Color(hex: hex))
+                                .frame(width: 36, height: 36)
+                                .overlay(
+                                    Circle().stroke(
+                                        isActive ? DS.Colors.primary : DS.Colors.surfaceBorder,
+                                        lineWidth: isActive ? 3 : 1
+                                    )
+                                )
+                        }
+                    }
+                }
+                .padding(.horizontal, DS.Spacing.md)
+            }
+
+            // Corner radius slider (only meaningful for rectangle / roundedRect)
+            if let shapeType = viewModel.selectedElement?.shapeStyle?.shapeType,
+               shapeType == .rectangle || shapeType == .roundedRect {
+                HStack {
+                    Image(systemName: "rectangle.roundedtop")
+                        .font(.system(size: 13))
+                        .foregroundColor(DS.Colors.textSecondary)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.selectedElement?.shapeStyle?.cornerRadius ?? 0 },
+                            set: { newVal in
+                                if let id = viewModel.selectedElement?.id {
+                                    viewModel.updateElement(id) { el in
+                                        el.shapeStyle?.cornerRadius = newVal
+                                    }
+                                }
+                            }
+                        ),
+                        in: 0...80,
+                        step: 1
+                    )
+                    .tint(DS.Colors.primary)
+                    Text("\(Int(viewModel.selectedElement?.shapeStyle?.cornerRadius ?? 0))")
+                        .font(DS.Typography.captionSmall)
+                        .foregroundColor(DS.Colors.textSecondary)
+                        .monospacedDigit()
+                        .frame(width: 28, alignment: .trailing)
+                }
+                .padding(.horizontal, DS.Spacing.md)
+            }
+        }
+        .padding(.bottom, DS.Spacing.sm)
+    }
+
+    
     private func gradientPresetButton(_ name: String, colors: [String]) -> some View {
         let isActive = viewModel.selectedElement?.textStyle?.gradientColors == colors
         return Button {
@@ -1672,6 +1782,7 @@ extension View {
 enum EditorToolPanel: Equatable {
     case text, photo, calligraphy, stickers, shapes, background, filters, effects
     case opacity, mask, textFill
+    case shapeStyle
 }
 
 // MARK: - Triangle Shape
